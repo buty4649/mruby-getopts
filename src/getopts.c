@@ -12,6 +12,7 @@
 #include "mruby/hash.h"
 #include "mruby/string.h"
 #include "mruby/value.h"
+#include "mruby/variable.h"
 
 /*
  * Array#getopt_long(optstring, longopts) -> Hash
@@ -34,6 +35,7 @@ mrb_getopt_long(mrb_state *mrb, mrb_value ary)
   int longindex;
 
   int i;
+  mrb_value progname;
   mrb_value longopts_m;
   mrb_value opt_hash;
 
@@ -59,7 +61,12 @@ mrb_getopt_long(mrb_state *mrb, mrb_value ary)
   if (!argv) {
     mrb_raise(mrb, E_RUNTIME_ERROR, "Memory allocation failed!");
   }
-  argv[0] = "";
+  progname = mrb_gv_get(mrb, mrb_intern_lit(mrb, "$0"));
+  if (mrb_nil_p(progname)) {
+    argv[0] = "";
+  } else {
+    argv[0] = mrb_str_to_cstr(mrb, progname);
+  }
   for (i = 1; i < argc; i++) {
     argv[i] = mrb_str_to_cstr(mrb, mrb_ary_ref(mrb, ary, i-1));
   }
